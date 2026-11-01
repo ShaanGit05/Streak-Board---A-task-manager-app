@@ -6,6 +6,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, displayName: string) => Promise<void>;
+  signInDemo: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<string>;
   updateDisplayName: (name: string) => Promise<void>;
@@ -49,6 +50,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(session.user);
   };
 
+  const signInDemo = async () => {
+    try {
+      const session = await api.signIn('demo@streakboard.app', 'demo1234');
+      setUser(session.user);
+    } catch {
+      // Fallback to offline demo session to avoid Supabase email rate limits
+      const localSession: AuthSession = {
+        user: {
+          id: 'demo_user',
+          email: 'demo@streakboard.app',
+          display_name: 'Consistency Pro',
+        },
+      };
+      localStorage.setItem('streakboard_session', JSON.stringify(localSession));
+      setUser(localSession.user);
+    }
+  };
+
   const signOut = async () => {
     await api.signOut();
     setUser(null);
@@ -71,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         signIn,
         signUp,
+        signInDemo,
         signOut,
         resetPassword,
         updateDisplayName,

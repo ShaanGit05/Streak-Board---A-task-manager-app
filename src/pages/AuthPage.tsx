@@ -21,7 +21,7 @@ export const AuthPage: React.FC = () => {
   }>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const { signIn, signUp, resetPassword } = useAuth();
+  const { signIn, signUp, signInDemo, resetPassword } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -81,18 +81,11 @@ export const AuthPage: React.FC = () => {
   const handleDemoLogin = async () => {
     setSubmitting(true);
     try {
-      await signIn('demo@streakboard.app', 'demo1234');
-      addToast('Logged in as Demo User!', 'success');
+      await signInDemo();
+      addToast('Logged in to StreakBoard!', 'success');
       navigate('/');
-    } catch {
-      // If demo user doesn't exist yet in local storage, create it
-      try {
-        await signUp('demo@streakboard.app', 'demo1234', 'Consistency Pro');
-        addToast('Created & logged into Demo Account!', 'success');
-        navigate('/');
-      } catch (err: unknown) {
-        setErrors({ general: err instanceof Error ? err.message : 'Demo login failed' });
-      }
+    } catch (err: unknown) {
+      setErrors({ general: err instanceof Error ? err.message : 'Demo sign in failed' });
     } finally {
       setSubmitting(false);
     }
@@ -186,14 +179,41 @@ export const AuthPage: React.FC = () => {
           <div
             className="form-error"
             style={{
-              padding: '10px',
-              backgroundColor: 'rgba(248, 81, 73, 0.1)',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid rgba(248, 81, 73, 0.3)',
+              padding: '12px',
+              backgroundColor: 'rgba(248, 81, 73, 0.12)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(248, 81, 73, 0.35)',
               marginBottom: '16px',
+              fontSize: '13px',
+              lineHeight: '1.4',
             }}
           >
-            {errors.general}
+            <div>{errors.general}</div>
+            {errors.general.toLowerCase().includes('rate limit') && (
+              <div
+                style={{
+                  marginTop: '10px',
+                  paddingTop: '8px',
+                  borderTop: '1px solid rgba(248, 81, 73, 0.25)',
+                  fontSize: '12px',
+                  color: 'var(--text-bright)',
+                }}
+              >
+                <strong>💡 Quick Fix in Supabase:</strong>
+                <ol style={{ paddingLeft: '18px', margin: '4px 0 8px 0' }}>
+                  <li>Open <strong>Authentication → Providers → Email</strong></li>
+                  <li>Turn <strong>OFF</strong> <em>"Confirm email"</em> & Save</li>
+                </ol>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  style={{ width: '100%', marginTop: '6px' }}
+                  onClick={handleDemoLogin}
+                >
+                  ⚡ Skip & Continue in Demo Mode
+                </button>
+              </div>
+            )}
           </div>
         )}
 

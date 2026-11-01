@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { api } from '../lib/api';
 import { calculateStreakStats } from '../lib/streaks';
 import { calculateLevel } from '../lib/xp';
 import { calculateDailyScore } from '../lib/scoring';
 import { generateTasksForDate } from '../lib/recurrence';
-import type { Task, TaskCategory, TaskPriority } from '../lib/types';
+
+// Mock Supabase to be unconfigured during unit tests so they remain hermetic and offline
+vi.mock('../lib/supabase', () => ({
+  isSupabaseConfigured: () => false,
+  supabase: null,
+}));
 
 // Provide localStorage mock in Node/Vitest environment
 if (typeof localStorage === 'undefined' || !localStorage.getItem) {
@@ -89,7 +94,7 @@ describe('StreakBoard Full User Flow & Integration', () => {
     });
 
     // Task 3: Study task (difficulty 2, Low = 2 pts)
-    const task3 = await api.createTask({
+    await api.createTask({
       user_id: userId,
       task_date: today,
       title: 'Read Microservices Chapter',

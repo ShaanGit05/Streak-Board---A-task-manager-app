@@ -95,7 +95,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     try {
       setLoading(true);
-      const [userSettings, userScores, userRules, userTemplates, currentTasks, fullTasksList] =
+      let [userSettings, userScores, userRules, userTemplates, currentTasks, fullTasksList] =
         await Promise.all([
           api.getSettings(user.id),
           api.getDailyScores(user.id),
@@ -105,6 +105,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           api.getTasks(user.id),
         ]);
 
+      // Clean up any uncompleted tasks whose recurring rule was deleted
+      const activeRuleIds = new Set(userRules.map((r) => r.id));
+      const orphanedTasks = currentTasks.filter(
+        (t) => t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed
+      );
+      if (orphanedTasks.length > 0) {
+        for (const orphan of orphanedTasks) {
+          await api.deleteTask(orphan.id);
+        }
+        currentTasks = currentTasks.filter(
+          (t) => !(t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed)
+        );
+        fullTasksList = fullTasksList.filter(
+          (t) => !(t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed)
+        );
+        userScores = await api.getDailyScores(user.id);
+      }
+
       setSettings(userSettings);
       setAllScores(userScores);
       setRecurringRules(userRules);
@@ -112,8 +130,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setTasks(currentTasks);
       setAllTasks(fullTasksList);
 
-      // Check if recurring tasks should be generated for selectedDate
-      if (userRules.length > 0) {
+      // Check if recurring tasks should be generated for selectedDate (today or future only)
+      const todayStr = getTodayDateStr();
+      if (selectedDate >= todayStr && userRules.length > 0) {
         const generated = generateTasksForDate(userRules, selectedDate, currentTasks, user.id);
         if (generated.length > 0) {
           const inserted = await api.createMultipleTasks(generated);
@@ -143,7 +162,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const dateTasks = await api.getTasks(user.id, newDate);
         setTasks(dateTasks);
 
-        if (recurringRules.length > 0) {
+        const todayStr = getTodayDateStr();
+        if (newDate >= todayStr && recurringRules.length > 0) {
           const generated = generateTasksForDate(recurringRules, newDate, dateTasks, user.id);
           if (generated.length > 0) {
             const inserted = await api.createMultipleTasks(generated);
@@ -384,7 +404,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.deleteRecurringRule(id);
       setRecurringRules((prev) => prev.filter((r) => r.id !== id));
-      addToast('Recurring rule deleted', 'info');
+      // Remove all uncompleted tasks associated with this rule from state
+      setTasks((prev) => prev.filter((t) => !(t.recurring_rule_id === id && !t.is_completed)));
+      setAllTasks((prev) => prev.filter((t) => !(t.recurring_rule_id === id && !t.is_completed)));
+      const updatedScores = await api.getDailyScores(user.id);
+      setAllScores(updatedScores);
+      addToast('Recurring rule and its pending tasks removed', 'info');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete rule';
       addToast(msg, 'error');

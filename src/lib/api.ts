@@ -615,7 +615,7 @@ export const api = {
     const newRule: RecurringRule = {
       ...ruleData,
       id: 'rule_' + Math.random().toString(36).substring(2, 11),
-      created_at: new Date().toISOString(),
+      created_at: ruleData.created_at || new Date().toISOString(),
     };
 
     if (isSupabaseConfigured() && supabase) {
@@ -661,9 +661,49 @@ export const api = {
 
   async deleteRecurringRule(ruleId: string): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
+      // 1. Delete all uncompleted tasks associated with this recurring rule
+      const { data: affectedTasks } = await supabase
+        .from('tasks')
+        .select('id, user_id, task_date')
+        .eq('recurring_rule_id', ruleId)
+        .eq('is_completed', false);
+
+      if (affectedTasks && affectedTasks.length > 0) {
+        await supabase
+          .from('tasks')
+          .delete()
+          .eq('recurring_rule_id', ruleId)
+          .eq('is_completed', false);
+
+        // Resync daily scores for all affected dates
+        const dates = Array.from(new Set(affectedTasks.map((t: { task_date: string }) => t.task_date)));
+        for (const date of dates) {
+          const userId = affectedTasks[0].user_id;
+          await this.syncDailyScore(userId, date);
+        }
+      }
+
+      // 2. Delete the recurring rule itself
       const { error } = await supabase.from('recurring_rules').delete().eq('id', ruleId);
       if (error) throw error;
     } else {
+      const allTasks = getFromStorage<Task[]>(LOCAL_STORAGE_KEYS.TASKS, []);
+      const affectedTasks = allTasks.filter(
+        (t) => t.recurring_rule_id === ruleId && !t.is_completed
+      );
+
+      if (affectedTasks.length > 0) {
+        const remainingTasks = allTasks.filter(
+          (t) => !(t.recurring_rule_id === ruleId && !t.is_completed)
+        );
+        saveToStorage(LOCAL_STORAGE_KEYS.TASKS, remainingTasks);
+
+        const dates = Array.from(new Set(affectedTasks.map((t) => t.task_date)));
+        for (const date of dates) {
+          await this.syncDailyScore(affectedTasks[0].user_id, date);
+        }
+      }
+
       const rules = getFromStorage<RecurringRule[]>(LOCAL_STORAGE_KEYS.RULES, []);
       saveToStorage(
         LOCAL_STORAGE_KEYS.RULES,

@@ -96,4 +96,29 @@ describe('Recurrence Logic', () => {
     expect(regenerated.length).toBe(2);
     expect(regenerated.map((t) => t.title)).not.toContain('Gym Workout');
   });
+
+  it('does NOT generate tasks on days prior to the rule creation date', () => {
+    // Rule created on Thursday (2026-11-05)
+    const thursdayRule: RecurringRule = {
+      id: 'rule-thursday',
+      user_id: 'u1',
+      title: 'Thursday Habit',
+      category: 'Study',
+      priority: 'High',
+      difficulty: 3,
+      repeat_type: 'daily',
+      is_active: true,
+      created_at: '2026-11-05T10:00:00.000Z',
+    };
+
+    // Prior days: Wednesday (2026-11-04), Tuesday (2026-11-03)
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-04')).toBe(false);
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-03')).toBe(false);
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-02')).toBe(false);
+
+    // On or after Thursday:
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-05')).toBe(true);
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-06')).toBe(true);
+    expect(shouldRuleGenerateForDate(thursdayRule, '2026-11-07')).toBe(true);
+  });
 });

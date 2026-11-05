@@ -61,6 +61,7 @@ describe('StreakBoard Full User Flow & Integration', () => {
       difficulty: 3, // 3 * 1.5 = 4.5 pts
       repeat_type: 'daily',
       is_active: true,
+      created_at: '2026-11-02T08:00:00.000Z',
     });
     expect(rule.id).toBeDefined();
 

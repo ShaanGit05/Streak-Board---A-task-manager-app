@@ -1,11 +1,23 @@
 import type { RecurringRule, Task } from './types';
-import { getDayOfWeek } from './dates';
+import { getDayOfWeek, formatLocalDate } from './dates';
 
 /**
  * Determine if a recurring rule applies to a specific date.
  */
 export function shouldRuleGenerateForDate(rule: RecurringRule, dateStr: string): boolean {
   if (!rule.is_active) return false;
+
+  // Never generate tasks for dates prior to rule creation
+  if (rule.created_at) {
+    try {
+      const ruleCreationDate = formatLocalDate(new Date(rule.created_at));
+      if (dateStr < ruleCreationDate) {
+        return false;
+      }
+    } catch {
+      // fallback
+    }
+  }
 
   const dayOfWeek = getDayOfWeek(dateStr); // 0=Sun, 1=Mon, ..., 6=Sat
 

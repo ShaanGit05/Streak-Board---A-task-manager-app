@@ -17,6 +17,7 @@ import {
   getTodayDateStr,
   addDaysToDateStr,
   getDatesInWeek,
+  formatLocalDate,
 } from '../lib/dates';
 import { calculateDailyScore } from '../lib/scoring';
 import { calculateStreakStats } from '../lib/streaks';
@@ -105,21 +106,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           api.getTasks(user.id),
         ]);
 
-      // Clean up any uncompleted tasks whose recurring rule was deleted
-      const activeRuleIds = new Set(userRules.map((r) => r.id));
-      const orphanedTasks = currentTasks.filter(
-        (t) => t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed
-      );
-      if (orphanedTasks.length > 0) {
-        for (const orphan of orphanedTasks) {
-          await api.deleteTask(orphan.id);
+      // Clean up any uncompleted tasks whose recurring rule was deleted OR were mistakenly generated prior to rule creation date
+      const activeRulesMap = new Map(userRules.map((r) => [r.id, r]));
+      const invalidTasks = fullTasksList.filter((t) => {
+        if (!t.recurring_rule_id || t.is_completed) return false;
+        const rule = activeRulesMap.get(t.recurring_rule_id);
+        if (!rule) return true; // Rule was deleted
+        if (rule.created_at) {
+          const ruleCreationDate = formatLocalDate(new Date(rule.created_at));
+          if (t.task_date < ruleCreationDate) return true; // Retroactive task generated on day before rule was created
         }
-        currentTasks = currentTasks.filter(
-          (t) => !(t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed)
-        );
-        fullTasksList = fullTasksList.filter(
-          (t) => !(t.recurring_rule_id && !activeRuleIds.has(t.recurring_rule_id) && !t.is_completed)
-        );
+        return false;
+      });
+
+      if (invalidTasks.length > 0) {
+        const invalidIds = new Set(invalidTasks.map((t) => t.id));
+        for (const task of invalidTasks) {
+          await api.deleteTask(task.id);
+        }
+        currentTasks = currentTasks.filter((t) => !invalidIds.has(t.id));
+        fullTasksList = fullTasksList.filter((t) => !invalidIds.has(t.id));
         userScores = await api.getDailyScores(user.id);
       }
 
@@ -214,17 +220,42 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return calculateDailyScore(tasks, isSelectedDateRestDay, settings.target_completion_pct);
   }, [tasks, isSelectedDateRestDay, settings.target_completion_pct]);
 
+  // Effective scores incorporating today's live completion state for instant reactive streak & XP updates
+  const effectiveScores = useMemo(() => {
+    const todayStr = getTodayDateStr();
+    if (selectedDate === todayStr && tasks.length > 0) {
+      const todayScoreIndex = allScores.findIndex((s) => s.score_date === todayStr);
+      const liveTodayScore: DailyScore = {
+        id: todayScoreIndex >= 0 ? allScores[todayScoreIndex].id : 'today_live',
+        user_id: user?.id || '',
+        score_date: todayStr,
+        points_earned: dailySummary.points_earned,
+        points_total: dailySummary.points_total,
+        completion_pct: dailySummary.completion_pct,
+        tasks_completed: dailySummary.tasks_completed,
+        tasks_total: dailySummary.tasks_total,
+        is_rest_day: isSelectedDateRestDay,
+      };
+      if (todayScoreIndex >= 0) {
+        return allScores.map((s, idx) => (idx === todayScoreIndex ? liveTodayScore : s));
+      } else {
+        return [...allScores, liveTodayScore];
+      }
+    }
+    return allScores;
+  }, [allScores, selectedDate, tasks, dailySummary, isSelectedDateRestDay, user?.id]);
+
   // Streak Stats
   const streakStats = useMemo(() => {
-    return calculateStreakStats(allScores, settings.target_completion_pct, getTodayDateStr());
-  }, [allScores, settings.target_completion_pct]);
+    return calculateStreakStats(effectiveScores, settings.target_completion_pct, getTodayDateStr());
+  }, [effectiveScores, settings.target_completion_pct]);
 
   // Level & XP calculation
   const levelInfo = useMemo(() => {
     // Total XP = total points earned across all scores
-    const totalPoints = allScores.reduce((sum, s) => sum + s.points_earned, 0);
+    const totalPoints = effectiveScores.reduce((sum, s) => sum + s.points_earned, 0);
     return calculateLevel(totalPoints);
-  }, [allScores]);
+  }, [effectiveScores]);
 
   // Task actions
   const createTask = async (data: Omit<Task, 'id' | 'user_id' | 'task_date' | 'is_completed'> & { is_completed?: boolean }) => {

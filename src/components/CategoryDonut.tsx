@@ -96,7 +96,7 @@ export const CategoryDonut: React.FC<CategoryDonutProps> = ({ tasks }) => {
               cy={size / 2}
               r={radius}
               fill="transparent"
-              stroke="#21262d"
+              stroke="var(--bg-subtle)"
               strokeWidth={strokeWidth}
             />
 

@@ -176,7 +176,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 step="1"
                 value={difficulty}
                 onChange={(e) => setDifficulty(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#26a641' }}
+                style={{ width: '100%', accentColor: 'var(--accent-green)' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)' }}>
                 <span>1 (Trivial)</span>

@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { TaskModal } from '../components/TaskModal';
 import { RecurringTasksModal } from '../components/RecurringTasksModal';
 import { TemplateModal } from '../components/TemplateModal';
+import { GlassDatePicker } from '../components/GlassDatePicker';
 import type { Task } from '../lib/types';
 import { formatDisplayDate, isTodayStr } from '../lib/dates';
 import { calculateTaskPoints } from '../lib/scoring';
@@ -11,7 +12,6 @@ import {
   ChevronRight,
   Plus,
   Copy,
-  Calendar,
   RotateCcw,
   Sparkles,
   Coffee,
@@ -30,6 +30,7 @@ export const TodayPage: React.FC = () => {
     goToNextDay,
     goToToday,
     tasks,
+    allScores,
     dailySummary,
     settings,
     createTask,
@@ -71,7 +72,7 @@ export const TodayPage: React.FC = () => {
     <div className="today-page">
       {/* Top Date Navigation Bar */}
       <div
-        className="card"
+        className="card today-top-bar"
         style={{
           padding: '14px 18px',
           marginBottom: '20px',
@@ -80,6 +81,8 @@ export const TodayPage: React.FC = () => {
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '12px',
+          position: 'relative',
+          zIndex: 50,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -121,32 +124,14 @@ export const TodayPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Date Picker Input */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Calendar
-              size={14}
-              style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)' }}
-            />
-            <input
-              type="date"
-              className="form-input"
-              value={selectedDate}
-              onChange={(e) => {
-                if (e.target.value) {
-                  setSelectedDate(e.target.value);
-                }
-              }}
-              style={{
-                paddingLeft: '32px',
-                paddingTop: '5px',
-                paddingBottom: '5px',
-                fontSize: '13px',
-                width: '150px',
-              }}
-              aria-label="Select Date"
-            />
-          </div>
+        {/* Glassmorphic Interactive Date Picker */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <GlassDatePicker
+            value={selectedDate}
+            onChange={(newDate) => setSelectedDate(newDate)}
+            scores={allScores}
+            targetGoalPct={settings.target_completion_pct}
+          />
 
           {/* Rest Day Button */}
           <button
@@ -172,15 +157,16 @@ export const TodayPage: React.FC = () => {
         <div
           style={{
             padding: '12px 18px',
-            backgroundColor: '#16283b',
-            border: '1px solid #388bfd',
+            backgroundColor: 'rgba(56, 189, 248, 0.12)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
             borderRadius: 'var(--radius-md)',
-            color: '#79c0ff',
+            color: 'var(--accent-blue)',
             marginBottom: '20px',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
             fontSize: '13px',
+            backdropFilter: 'blur(12px)',
           }}
         >
           <Coffee size={18} />
@@ -247,7 +233,7 @@ export const TodayPage: React.FC = () => {
         <div
           style={{
             height: '8px',
-            backgroundColor: 'var(--bg-canvas)',
+            backgroundColor: 'var(--bg-subtle)',
             borderRadius: 'var(--radius-full)',
             overflow: 'hidden',
             marginTop: '14px',
@@ -362,8 +348,9 @@ export const TodayPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '14px',
-                    backgroundColor: task.is_completed ? '#12171d' : 'var(--bg-card)',
+                    backgroundColor: task.is_completed ? 'var(--bg-subtle)' : 'var(--bg-card)',
                     borderColor: task.is_completed ? 'var(--border-muted)' : 'var(--border-default)',
+                    opacity: task.is_completed ? 0.8 : 1,
                     transition: 'all 0.15s ease',
                   }}
                 >

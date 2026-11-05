@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import type { DailyScore } from '../lib/types';
 import {
   parseLocalDate,
@@ -120,13 +121,13 @@ export const Heatmap: React.FC<HeatmapProps> = ({
 
   // Color selection based on % and rest day
   const getCellColor = (score?: DailyScore) => {
-    if (!score) return '#161b22';
-    if (score.is_rest_day) return '#204068'; // Blue-gray for rest day
-    if (score.points_total === 0 || score.completion_pct === 0) return '#161b22';
-    if (score.completion_pct <= 25) return '#0e4429';
-    if (score.completion_pct <= 50) return '#006d32';
-    if (score.completion_pct <= 75) return '#26a641';
-    return '#39d353';
+    if (!score) return 'var(--green-0)';
+    if (score.is_rest_day) return 'var(--rest-blue)';
+    if (score.points_total === 0 || score.completion_pct === 0) return 'var(--green-0)';
+    if (score.completion_pct <= 25) return 'var(--green-1)';
+    if (score.completion_pct <= 50) return 'var(--green-2)';
+    if (score.completion_pct <= 75) return 'var(--green-3)';
+    return 'var(--green-4)';
   };
 
   const cellSize = 11;
@@ -183,7 +184,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="heatmap-svg"
-          style={{ width: '100%', height: 'auto', minWidth: '700px' }}
+          style={{ width: '100%', height: 'auto', minWidth: '680px', display: 'block' }}
         >
           {/* Day of Week Labels (Mon=Row 1, Wed=Row 3, Fri=Row 5) */}
           <text x={0} y={topPadding + 1 * (cellSize + cellGap) + 9} className="heatmap-axis-label">
@@ -225,7 +226,7 @@ export const Heatmap: React.FC<HeatmapProps> = ({
                 rx={2}
                 ry={2}
                 fill={fill}
-                stroke={isRest ? '#58a6ff' : '#30363d'}
+                stroke={isRest ? 'var(--rest-blue-light)' : 'var(--border-default)'}
                 strokeWidth={isRest ? 1.5 : 0.5}
                 className="heatmap-cell"
                 onClick={() => onSelectDate(cell.dateStr)}
@@ -241,24 +242,24 @@ export const Heatmap: React.FC<HeatmapProps> = ({
       <div className="heatmap-footer">
         <div className="heatmap-legend">
           <span className="legend-label">Less</span>
-          <div className="legend-cell" style={{ backgroundColor: '#161b22' }} />
-          <div className="legend-cell" style={{ backgroundColor: '#0e4429' }} />
-          <div className="legend-cell" style={{ backgroundColor: '#006d32' }} />
-          <div className="legend-cell" style={{ backgroundColor: '#26a641' }} />
-          <div className="legend-cell" style={{ backgroundColor: '#39d353' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--green-0)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--green-1)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--green-2)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--green-3)' }} />
+          <div className="legend-cell" style={{ backgroundColor: 'var(--green-4)' }} />
           <span className="legend-label">More</span>
 
           <span className="legend-divider">|</span>
           <div
             className="legend-cell"
-            style={{ backgroundColor: '#204068', border: '1px solid #58a6ff' }}
+            style={{ backgroundColor: 'var(--rest-blue)', border: '1px solid var(--rest-blue-light)' }}
           />
           <span className="legend-label">Rest Day</span>
         </div>
       </div>
 
-      {/* Floating Hover Tooltip */}
-      {tooltip.visible && tooltip.data && (
+      {/* Floating Hover Tooltip Portal */}
+      {tooltip.visible && tooltip.data && typeof document !== 'undefined' && createPortal(
         <div
           className="heatmap-tooltip"
           style={{
@@ -302,7 +303,8 @@ export const Heatmap: React.FC<HeatmapProps> = ({
             <div className="tooltip-empty">No tasks planned on this day</div>
           )}
           <div className="tooltip-hint">Click square to open day</div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

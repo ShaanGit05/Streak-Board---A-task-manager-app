@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { SettingsModal } from './SettingsModal';
+import { ThemeToggle } from './ThemeToggle';
 import {
   Calendar,
   History,
@@ -79,6 +80,11 @@ export const Layout: React.FC = () => {
             <span>Settings</span>
           </button>
         </nav>
+
+        {/* Theme Mode Switcher */}
+        <div style={{ padding: '0 14px 10px 14px' }}>
+          <ThemeToggle />
+        </div>
 
         {/* Sidebar XP Card */}
         <div className="sidebar-xp-card">
@@ -183,6 +189,11 @@ export const Layout: React.FC = () => {
           <Settings size={20} />
           <span>Settings</span>
         </button>
+
+        <div className="bottom-nav-item" style={{ cursor: 'pointer' }}>
+          <ThemeToggle compact />
+          <span>Theme</span>
+        </div>
       </nav>
 
       {/* Settings Modal */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { Flame, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 
 export const AuthPage: React.FC = () => {
@@ -99,16 +100,21 @@ export const AuthPage: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        backgroundColor: 'var(--bg-canvas)',
+        backgroundImage: 'var(--bg-gradient)',
+        backgroundAttachment: 'fixed',
+        position: 'relative',
       }}
     >
+      <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+        <ThemeToggle compact />
+      </div>
+
       <div
         className="card"
         style={{
           width: '100%',
           maxWidth: '420px',
-          padding: '32px 28px',
-          boxShadow: '0 16px 36px rgba(0, 0, 0, 0.4)',
+          padding: '36px 30px',
         }}
       >
         {/* Brand Header */}

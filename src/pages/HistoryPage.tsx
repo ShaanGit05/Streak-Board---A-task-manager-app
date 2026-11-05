@@ -115,8 +115,8 @@ export const HistoryPage: React.FC = () => {
                   justifyContent: 'space-between',
                   flexWrap: 'wrap',
                   gap: '14px',
-                  backgroundColor: score.is_rest_day ? '#131e2b' : 'var(--bg-card)',
-                  borderColor: score.is_rest_day ? '#388bfd40' : 'var(--border-default)',
+                  backgroundColor: score.is_rest_day ? 'var(--bg-subtle)' : 'var(--bg-card)',
+                  borderColor: score.is_rest_day ? 'var(--rest-blue-light)' : 'var(--border-default)',
                 }}
               >
                 {/* Left: Date & Status Badges */}
@@ -127,16 +127,16 @@ export const HistoryPage: React.FC = () => {
                       height: '40px',
                       borderRadius: 'var(--radius-md)',
                       backgroundColor: score.is_rest_day
-                        ? '#204068'
+                        ? 'var(--rest-blue)'
                         : score.completion_pct >= 75
-                        ? '#006d32'
+                        ? 'var(--green-2)'
                         : score.completion_pct >= 25
-                        ? '#0e4429'
+                        ? 'var(--green-1)'
                         : 'var(--bg-subtle)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: score.is_rest_day ? '#79c0ff' : 'var(--text-bright)',
+                      color: score.is_rest_day ? 'var(--accent-blue)' : 'var(--text-bright)',
                       fontWeight: 700,
                       fontSize: '12px',
                     }}
@@ -154,7 +154,7 @@ export const HistoryPage: React.FC = () => {
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '8px', marginTop: '2px' }}>
                       {score.is_rest_day ? (
-                        <span style={{ color: '#79c0ff' }}>🌿 Rest Day (Streak preserved)</span>
+                        <span style={{ color: 'var(--accent-blue)' }}>🌿 Rest Day (Streak preserved)</span>
                       ) : (
                         <>
                           <span>{score.points_earned} / {score.points_total} pts earned</span>

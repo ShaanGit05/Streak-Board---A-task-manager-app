@@ -52,7 +52,7 @@ export const ProfilePage: React.FC = () => {
   const memberSince = 'Nov 2026';
 
   return (
-    <div className="profile-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="profile-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', maxWidth: '100%', minWidth: 0 }}>
       {/* Profile Header Card */}
       <div className="card" style={{ padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
@@ -131,7 +131,7 @@ export const ProfilePage: React.FC = () => {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
-                    backgroundColor: 'var(--bg-canvas)',
+                    backgroundColor: 'var(--bg-subtle)',
                     border: '1px solid var(--green-3)',
                     color: 'var(--green-4)',
                     padding: '2px 8px',
@@ -163,7 +163,7 @@ export const ProfilePage: React.FC = () => {
             <div
               style={{
                 height: '8px',
-                backgroundColor: 'var(--bg-canvas)',
+                backgroundColor: 'var(--bg-subtle)',
                 borderRadius: 'var(--radius-full)',
                 overflow: 'hidden',
                 border: '1px solid var(--border-default)',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { UserSettings } from '../lib/types';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -76,6 +77,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* Theme & Appearance */}
+            <div className="form-group" style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border-muted)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div>
+                  <label className="form-label" style={{ margin: 0 }}>
+                    Appearance & Theme
+                  </label>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    Switch between Dark Glassmorphic and Light Glassmorphic styles
+                  </div>
+                </div>
+                <ThemeToggle />
+              </div>
+            </div>
+
             {/* Target Daily Goal % */}
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>

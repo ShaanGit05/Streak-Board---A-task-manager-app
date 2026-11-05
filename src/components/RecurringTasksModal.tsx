@@ -312,7 +312,7 @@ export const RecurringTasksModal: React.FC<RecurringTasksModalProps> = ({
                   step="1"
                   value={difficulty}
                   onChange={(e) => setDifficulty(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: '#26a641' }}
+                  style={{ width: '100%', accentColor: 'var(--accent-green)' }}
                 />
               </div>
 
